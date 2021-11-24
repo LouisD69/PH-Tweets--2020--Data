@@ -17,66 +17,67 @@ import csv
 TWEET_IDS_FOLDER_PATH = "./TweetIds/"
 OUTPUT_FOLDER_PATH = "./Output/"
 
-def loadTweetIds(path=TWEET_IDS_FOLDER_PATH):
-    print("Loading tweet IDs...")
+class TweetLoader:
+    def loadTweetIds(start_range, end_range, path=TWEET_IDS_FOLDER_PATH):
+        print("Loading tweet IDs...")
 
-    file_names = [f for f in listdir(path) if isfile(join(path, f)) and f[-4:] == ".csv"]
-    temp_list = []
-    count = 0
-    for file_name in file_names:
-        temp_list += pd.read_csv(
-            path + file_name, 
-            index_col=False, 
-            header=0, 
-            squeeze = True,
-            lineterminator='\n').to_list()
+        file_names = [f for f in listdir(path) if isfile(join(path, f)) and f[-4:] == ".csv"]
+        temp_list = []
+        count = 0
+        for file_name in file_names:
+            temp_list += pd.read_csv(
+                path + file_name,
+                index_col=False,
+                header=0,
+                squeeze = True,
+                lineterminator='\n').to_list()
 
-        count += 1
-        progress = count / len(file_names) * 100
-        print("Progress: %.2f%%" % progress)
+            count += 1
+            progress = count / len(file_names) * 100
+            print("Progress: %.2f%%" % progress)
 
-    print("%d tweet IDs have been loaded into memory." % len(temp_list))
-	
-    return temp_list
+        print("%d tweet IDs have been loaded into memory." % len(temp_list))
 
-def initializeClient():
-	return Twarc2(bearer_token=BEARER_TOEKN)
+        return temp_list
 
-def saveTweetsToCsv(tweets):
-    tweet_df = pd.DataFrame(tweets)
-    tweet_df.to_csv(
-        OUTPUT_FOLDER_PATH + "tweets.csv",
-        sep=',',
-        index=False,
-        quoting=csv.QUOTE_ALL)
+    def initializeClient():
+        return Twarc2(bearer_token=BEARER_TOEKN)
 
-def main():
-    tweet_ids = loadTweetIds()
+    def saveTweetsToCsv(tweets):
+        tweet_df = pd.DataFrame(tweets)
+        tweet_df.to_csv(
+            OUTPUT_FOLDER_PATH + "tweets.csv",
+            sep=',',
+            index=False,
+            quoting=csv.QUOTE_ALL)
 
-    # Readying the Twitter client to interface
-    # Note:
-    client = initializeClient()
-    lookup = client.tweet_lookup(tweet_ids=tweet_ids[:1000])
+    def main():
+        tweet_ids = loadTweetIds()
 
-    # Here is where all results are placed. Kindly modify this
-    # so that you can save the tweets to your own machine. In its
-    # current form, this simply takes all tweets and saves some 
-    # information to a tweet
-    tweets = []
-    for page in lookup:
-        # This returns a list of tweets
-        result = expansions.flatten(page)
-        # For each tweet that was found, add it to a list. For
-        # this example, I'm only taking the text and when the tweet
-        # was created at.
-        for tweet in result:
-            tweets.append({
-                'text': tweet['text'],
-                'created_at': tweet['created_at']
-                })
+        # Readying the Twitter client to interface
+        # Note:
+        client = initializeClient()
+        lookup = client.tweet_lookup(tweet_ids=tweet_ids[:1000])
 
-    # Save tweets to a CSV file
-    saveTweetsToCsv(tweets)
+        # Here is where all results are placed. Kindly modify this
+        # so that you can save the tweets to your own machine. In its
+        # current form, this simply takes all tweets and saves some
+        # information to a tweet
+        tweets = []
+        for page in lookup:
+            # This returns a list of tweets
+            result = expansions.flatten(page)
+            # For each tweet that was found, add it to a list. For
+            # this example, I'm only taking the text and when the tweet
+            # was created at.
+            for tweet in result:
+                tweets.append({
+                    'text': tweet['text'],
+                    'created_at': tweet['created_at']
+                    })
 
-if __name__ == "__main__":
-    main()
+        # Save tweets to a CSV file
+        saveTweetsToCsv(tweets)
+
+    if __name__ == "__main__":
+        main()
